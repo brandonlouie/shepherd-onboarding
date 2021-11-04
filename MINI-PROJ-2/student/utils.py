@@ -40,7 +40,8 @@ class RESPONSES():
     CANNED_RESPONSES = {
         "cheese": "I like cheese",
         "shepherd": "baaaaaaa",
-        "ydl": "yodelayheehoo"
+        "ydl": "yodelayheehoo",
+        "gamer": "you lost the game"
     }
     BANNED_RESPONSES = [
         "stanford",

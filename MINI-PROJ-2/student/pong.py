@@ -64,8 +64,8 @@ def respond_to_notify(text):
     # import varaibles from the global scope.
     global BANNED, LAST_MESSAGE
 
-    ###### YOUR CODE HERE ######
-
+    if BANNED:
+        return
     # if we get something we have a canned response for, send the canned response
     if text in RESPONSES.CANNED_RESPONSES:
         # get the anwer from the utils file.
@@ -80,9 +80,8 @@ def respond_to_notify(text):
         # wrapped_header = PING_HEADERS.RESPOND(text=response, time=time.time())
         # ydl_send(wrapped_header[0], wrapped_header[1], wrapped_header[2])
         ydl_send(*PING_HEADERS.RESPOND(text=response, time=time.time()))
-
-    ###### YOUR CODE HERE ######
-
+    elif text in RESPONSES.BANNED_RESPONSES:
+        BANNED = True
     # otherwise, just echo the message
     else:
         # see above comments; only difference is we're saving and sending
@@ -96,7 +95,8 @@ def respond_to_repeat():
     Send the most recent response back to ping via ydl so long as we are not banned.
     """
     ###### YOUR CODE HERE ######
-    pass
+    if LAST_MESSAGE != None and not BANNED:
+        ydl_send(*PING_HEADERS.RESPOND(text=LAST_MESSAGE, time=time.time()))
 
 # a mapping of header names to the functions that will be called to handle that header.
 HEADER_MAPPINGS = {

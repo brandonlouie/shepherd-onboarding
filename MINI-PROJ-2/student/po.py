@@ -14,11 +14,13 @@ events = queue.Queue()
 # tell YDL that we want to start listening to the target PO,
 # and when messages are received, to put them in events.
 ydl_start_read("PO", events)
-# an infinite while loop. This program only ends when the user presses ctrl+c.
-while True:
+#This program only ends when the user presses ctrl+c, or when 5 messages have been received
+i = 0
+while i < 5:
     # block=True means that the program will wait here until something appears
     # the queue. Reading from the queue removes the read data from the queue, 
     # leaving the queue empty again.
     # rcvd will be a (header, dictionary) tuple.
     rcvd = events.get(block=True)
     print(f"RECEIVED: {rcvd}")
+    i += 1

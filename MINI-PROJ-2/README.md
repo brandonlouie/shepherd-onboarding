@@ -16,7 +16,7 @@ python3 ydl.py
 Now, you can run `python3 pi.py` in the third terminal. A message should appear in the first terminal. 
 If you want to stop the first two terminals, press `Ctrl C` in each of them.
 
-__Question 1__: What does first terminal say?
+__Question 1__: What does first terminal say? `RECEIVED: ('CHEESE', {'info': 'I like cheese'})`
 
 __Task 1__: Modify `pi.py` such that `po.py` receive the message "BLUEBERRY", with the description "Goats eat blueberries".
 
@@ -33,7 +33,7 @@ Terminal 3: `python3 ping.py`
 
 Now, `ping.py` should prompt you for a message. Send the message `shepherd` and see what happens!
 
-__Question 2__: What are other messages you can send to get a canned response back? Which file stores the dictionary of possible responses?
+__Question 2__: What are other messages you can send to get a canned response back? Which file stores the dictionary of possible responses? `cheese, shepherd, ydl` `utils.py`
 
 __Task 3__: Add a custom message + canned response pair.
 
