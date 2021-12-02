@@ -208,15 +208,36 @@ def start_game():
 
 
     # TODO: add lines here!
+    if len(PLAYERS) == 5:
+        roles_deck = [ROLES.LIBERAL for i in range(3)]
+        roles_deck += [ROLES.FASCIST for i in range(1)]
+    elif len(PLAYERS) == 6:
+        roles_deck = [ROLES.LIBERAL for i in range(4)]
+        roles_deck += [ROLES.FASCIST for i in range(1)]
+    elif len(PLAYERS) == 7:
+        roles_deck = [ROLES.LIBERAL for i in range(4)]
+        roles_deck += [ROLES.FASCIST for i in range(2)]
+    elif len(PLAYERS) == 8:
+        roles_deck = [ROLES.LIBERAL for i in range(5)]
+        roles_deck += [ROLES.FASCIST for i in range(2)]
+    elif len(PLAYERS) == 9:
+        roles_deck = [ROLES.LIBERAL for i in range(5)]
+        roles_deck += [ROLES.FASCIST for i in range(3)]
+    elif len(PLAYERS) == 10:
+        roles_deck = [ROLES.LIBERAL for i in range(6)]
+        roles_deck += [ROLES.FASCIST for i in range(3)]
+    roles_deck += [ROLES.HITLER]
+    shuffle_deck(roles_deck)
+    if len(PLAYERS) > 10:
+        roles_deck += [ROLES.SPECTATOR for i in range(len(players) - 10)]
 
-    shuffle_deck(______)
 
     # Assign roles for each player using the deck.
     player_objs = list(PLAYERS.values())
     for i in range(len(PLAYERS)):
-        player_objs[i].role = ________
+        player_objs[i].role = roles_deck[i]
     # Initialize the board.
-    BOARD = ____________
+    BOARD = Board(len(PLAYERS))
     # END QUESTION 1
 
     send_individual_setups()
@@ -257,7 +278,17 @@ def eligible_chancellor_nominees():
     # Hint: the function remove_if_exists might be useful
 
     # TODO: replace the pass with your own code!
-    pass
+    if len(PLAYERS) > 5:
+        list_of_nominees = list(PLAYERS.keys())
+        remove_if_exists(list_of_nominees, PRESIDENT_ID)
+        remove_if_exists(list_of_nominees, PREVIOUS_PRESIDENT_ID)
+        remove_if_exists(list_of_nominees, PREVIOUS_CHANCELLOR_ID)
+        return list_of_nominees
+    elif len(PLAYERS) <= 5:
+        list_of_nominees = list(PLAYERS.keys())
+        remove_if_exists(list_of_nominees, PRESIDENT_ID)
+        remove_if_exists(list_of_nominees, PREVIOUS_CHANCELLOR_ID)
+        return list_of_nominees
 
     # END QUESTION 3
 
@@ -318,9 +349,11 @@ def end_election_results(secret):
         # game_over is called and the function is terminated
 
         # feel free to add lines if needed!
-        #if _____________________________________:
-        #   ___________________
-        #   return
+        current_chancellor = PLAYERS[NOMINATED_CHANCELLOR_ID]
+        chancellor_role = current_chancellor.role
+        if (current_chancellor_role == ROLES.HITLER) and (BOARD.fascist_enacted >= 3):
+           game_over("Fascists")
+           return
 
         # END QUESTION 5
         if len(CARD_DECK) < 3:
@@ -369,9 +402,9 @@ def president_discarded(secret, cards, discarded):
     # - the discarded card needs to be added to DISCARD_DECK
     # - DRAWN_CARDS needs to be set the the remaining two cards
     # - CAN_VETO_THIS_ROUND needs to be set based on a BOARD variable
-    ____________________________
-    ____________________________
-    ____________________________
+    DISCARD_DECK += discarded
+    DRAWN_CARDS = cards
+    CAN_VETO_THIS_ROUND = BOARD.can_veto
     # END QUESTION 4
     send_chancellor_discard()
 
@@ -428,12 +461,12 @@ def chancellor_discarded(secret, card, discarded):
     # BEGIN QUESTION 5
     # If the fascists enact 6 or more policies, they win.
     # If the liberals enact 5 or more policies, they win.
-    #if _______________________:
-    #    _______________________
-    #    return
-    #if _______________________:
-    #    _______________________
-    #    return
+    if BOARD.fascist_enacted >= 6:
+        game_over("Fascists")
+        return
+    if BOARD.liberal_enacted >= 5:
+        game_over("Liberals")
+        return
     # END QUESTION 5
     if card == CARDS.LIBERAL or len(BOARD.current_power_list()) == 0:
         advance_president()
@@ -488,18 +521,34 @@ def send_loyalty(id = None):
     #      ROLES.NONE
     if CURRENT_INVESTIGATED_PLAYER is None:
         # TODO: replace the pass with your own code!
-        pass
-        
-
-
+        eligibles = [p for p in PLAYERS if not PLAYERS[p].investigated]
+        remove_if_exists(eligibles, PRESIDENT_ID)
+        ydl_send(*UI_HEADERS.BEGIN_INVESTIGATION(
+        eligibles=eligibles,
+        recipients=None if id is None else [id]
+        ))
 
     else:
         # TODO: replace the pass with your own code!
-        pass
+        player = PLAYERS[CURRENT_INVESTIGATED_PLAYER]
+        investigated_role = player.role
+        if (investigated_role = ROLES.HITLER):
+            investigated_role = ROLES.FASCIST
 
+        if id is None or id == PRESIDENT_ID:
+            ydl_send(*UI_HEADERS.RECEIVE_INVESTIGATION(
+            player=CURRENT_INVESTIGATED_PLAYER,
+            role=investigated_role,
+            recipients=[PRESIDENT_ID]
+            ))
 
-
-        
+        if id != PRESIDENT_ID:
+            ydl_send(*UI_HEADERS.RECEIVE_INVESTIGATION(
+            player=CURRENT_INVESTIGATED_PLAYER,
+            role=ROLES.NONE,
+            recipients=[d for d in PLAYERS if d != PRESIDENT_ID]\
+                    if id is None else [id]
+        ))
     # END QUESTION 6
 
 
@@ -519,8 +568,8 @@ def investigate_player(secret, player):
     global CURRENT_INVESTIGATED_PLAYER
     if bad_id(player): return
     if bad_credentials(PRESIDENT_ID, secret): return 
-    _________________________
-    _________________________
+    PLAYERS[player].investigated = True
+    CURRENT_INVESTIGATED_PLAYER = player
     send_loyalty()
     # END QUESTION 6
 
@@ -535,8 +584,12 @@ def call_special_election(id = None):
     # with all of the players who are eligible to become the next president
 
     # TODO: replace the pass with your own code
-    pass
-
+    eligibles = list(PLAYERS)
+    remove_if_exists(eligibles, PRESIDENT_ID)
+    ydl_send(*UI_HEADERS.BEGIN_SPECIAL_ELECTION(
+        eligibles=eligibles,
+        recipients=None if id is None else [id]
+    ))
     # END QUESTION 6
 
 
@@ -562,7 +615,17 @@ def policy_peek(id = None):
     # 3 cards. HINT: should this be secure?
 
     # TODO: replace the pass with your own code
-    pass
+    if id is None or id == PRESIDENT_ID:
+        ydl_send(*UI_HEADERS.PERFORM_POLICY_PEEK(
+            cards=CARD_DECK[:3],
+            recipients=[PRESIDENT_ID]
+        ))
+    if id != PRESIDENT_ID:
+        ydl_send(*UI_HEADERS.PERFORM_POLICY_PEEK(
+            cards=[], #for security, don't want other UIs to know cards
+            recipients=[d for d in PLAYERS if d != PRESIDENT_ID]\
+                if id is None else [id]
+        ))
     
     # END QUESTION 6
 
@@ -610,8 +673,10 @@ def perform_execution(secret, player: str):
 
     # BEGIN QUESTION 5
     # if Hitler is executed, the liberals win
-    if _______________________:
-        _______________________
+    executed_player = PLAYERS[player]
+    executed_player_role = executed_player.role
+    if (executed_player_role == ROLES.HITLER):
+        game_over("Liberals")
         return
     # END QUESTION 5
     player_obj = PLAYERS.pop(player)
@@ -648,9 +713,9 @@ def game_over(winner):
     # which one it is. Hint: it's in the below "sender functions" section) 
     # You shouldn't need to add any addition lines.
     global GAME_STATE, WINNER    
-    _____________________
-    _____________________
-    _____________________
+    GAME_STATE = STATE.END
+    WINNER = winner
+    send_game_over()
     # END QUESTION 5
 
 
@@ -671,8 +736,8 @@ def send_policies_enacted(id = None):
     # Hint: look at utils.py for this header,
     # and look at Board.py to see what instance attributes you need
     ydl_send(*UI_HEADERS.POLICIES_ENACTED(
-        _____________________,
-        _____________________,
+        liberal=BOARD.liberal_enacted,
+        fascist=BOARD.fascist_enacted,
         recipients=None if id is None else [id]
     ))
     # END QUESTION 2
@@ -690,8 +755,10 @@ def send_chancellor_request(id = None):
     # Hint: you should use the eligible_chancellor_nominees function
     
     # TODO: replace pass with your code!
-    pass
-
+    ydl_send(*UI_HEADERS.CHANCELLOR_REQUEST(
+        eligibles=eligible_chancellor_nominees(),
+        recipients=None if id is None else [id]
+    ))
     # END QUESTION 3
 
 def send_await_vote(id = None):
@@ -732,12 +799,21 @@ def send_chancellor_discard(id = None):
     # send_president_discard above for an example of how this could work.
     if id is None or id == NOMINATED_CHANCELLOR_ID:
         # TODO: replace pass with your own code!
-        pass
+        ydl_send(*UI_HEADERS.CHANCELLOR_DISCARD(
+            cards=DRAWN_CARDS,
+            can_veto=CAN_VETO_THIS_ROUND,
+            recipients=[NOMINATED_CHANCELLOR_ID]
+        ))
 
 
     if id != NOMINATED_CHANCELLOR_ID:
         # TODO: replace pass with your own code!
-        pass
+        ydl_send(*UI_HEADERS.CHANCELLOR_DISCARD(
+            cards=[], #for security, don't want other UIs to know cards
+            can_veto=CAN_VETO_THIS_ROUND,
+            recipients=[d for d in PLAYERS if d != NOMINATED_CHANCELLOR_ID]\
+                if id is None else [id]
+        ))
 
 
     # END QUESTION 4
